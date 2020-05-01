@@ -23,9 +23,9 @@ def dehazeImage(img:numpy.ndarray, output_img_file:str,  a= None, t= None, rt= N
     from skimage import exposure
     oImg2 = exposure.adjust_gamma(oImg, gamma= 1.1)
     oImg3 = exposure.adjust_sigmoid(oImg2, gain= 5.5)
-    pass
+    #oImg3 = oImg3.astype(numpy.uint8)
     #save the image to file
-    sImg = AImage.save(oImg3, output_img_file)
+    _ = AImage.save(oImg3, output_img_file)
     if verbose:
         print(f"Image '{output_img_file}' saved.")
     return img
