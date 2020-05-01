@@ -6,7 +6,7 @@ Carlo S. Sartori
 """
 
 import numpy
-import DarkChannel
+from . import DarkChannel
 from numba import jit
 
 @jit

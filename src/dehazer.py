@@ -8,16 +8,16 @@ import argparse
 import sys
 import numpy
 
-def dehazeImage(img:numpy.ndarray, output_img_file:str,  a= None, t= None, rt= None, tmin:float= 0.1, ps:int= 15, w:float= 0.99, px:float= 1e-3, r:int= 40, eps:float= 1e-3, verbose:bool= False):
-    from AImage import AImage
-    from Dehaze import dehaze
+def dehazeImage(img:numpy.ndarray, outputImgFile:str,  a= None, t= None, rt= None, tmin:float= 0.1, ps:int= 15, w:float= 0.99, px:float= 1e-3, r:int= 40, eps:float= 1e-3, verbose:bool= False):
+    from .AImage import AImage
+    from .Dehaze import dehaze
     #tries to open the input image
     try:
-        img = AImage.open(input_img_file)
+        img = AImage.open(img)
         if verbose:
-            print(f"Image '{input_img_file}' opened.")
+            print(f"Image '{img}' opened.")
     except (IOError, FileNotFoundError):
-        raise FileNotFoundError(f"File '{input_img_file}' cannot be found.")
+        raise FileNotFoundError(f"File '{img}' cannot be found.")
     #Dehaze the input image
     oImg = dehaze(img.array(), a, t, rt, tmin, ps, w, px, r, eps, verbose)
     from skimage import exposure
@@ -25,11 +25,28 @@ def dehazeImage(img:numpy.ndarray, output_img_file:str,  a= None, t= None, rt= N
     oImg3 = exposure.adjust_sigmoid(oImg2, gain= 5.5)
     #oImg3 = oImg3.astype(numpy.uint8)
     #save the image to file
-    _ = AImage.save(oImg3, output_img_file)
+    _ = AImage.save(oImg3, outputImgFile)
     if verbose:
-        print(f"Image '{output_img_file}' saved.")
+        print(f"Image '{outputImgFile}' saved.")
     return img
 
+def dehazeDirectory(directory, outputDirectory= None, extensions= ["png", "jpg", "jpeg"], a= None, t= None, rt= None, tmin:float= 0.1, ps:int= 15, w:float= 0.99, px:float= 1e-3, r:int= 40, eps:float= 1e-3, verbose:bool= False):
+    import glob
+    import os
+    if outputDirectory is None:
+        outputDirectory = directory
+    fileSet = list()
+    for extension in extensions:
+        files = glob.glob(os.path.join(directory, "**", f"*.{extension}"), recursive= True)
+        fileSet += list(files)
+    fileSet = frozenset(fileSet)
+    print(f"Going to convert {len(fileSet)} images")
+    for i, filename in enumerate(fileSet, 1):
+        filenameParts = os.path.basename(filename).split(".")
+        fileBase = filenameParts[:-1]
+        outFile = os.path.join(outputDirectory, ".".join(fileBase + ["dehazed", filenameParts[-1]]))
+        _ = dehazeImage(filename, outFile, a, t, rt, tmin, ps, w, px, r, eps, verbose)
+        print(f"Done {i} of {len(fileSet)}")
 
 
 #Prepare the arguments the program shall receive
